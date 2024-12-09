@@ -3,58 +3,93 @@ package com.example.engineeringcalculator.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    background = Color(0xFF121212),
-    primary = Color(0xFF222222),
-    onPrimary = Color(0xFFFFFFFF),
-    scrim = Color(0xFF767474),
-    secondary = Color(0xFF3A3A3A),
-    onSecondary = Color(0xFF32CD32),
-    tertiary = Color.Red,
-    onTertiary = Color(0xFF000000)
-
+data class CustomColorScheme(
+    val basicUpperPanelBackground: Color,
+    val basicUpperPanelShadow: Color,
+    val basicScreenBackground: Color,
+    val basicNumberButtonBackground: Color,
+    val basicNumberButtonKey: Color,
+    val basicOperatorButtonKey: Color,
+    val basicOperatorButtonBackground: Color,
+    val scientificBackground: Color,
+    val iconButton: Color,
+    val operator:Color,
+    val cancel:Color,
+    val equalKey:Color
 )
+val localLightColorScheme = compositionLocalOf {
+    CustomColorScheme(
+        basicUpperPanelBackground = basicUpperPanelBackgroundLight,
+        basicUpperPanelShadow = basicUpperPanelShadowLight,
+        basicScreenBackground = basicScreenBackgroundLight,
+        basicNumberButtonBackground = basicNumberButtonBackgroundLight,
+        basicNumberButtonKey = basicNumberButtonKeyLight,
+        basicOperatorButtonKey = basicOperatorButtonKeyLight,
+        basicOperatorButtonBackground = basicOperatorButtonBackgroundLight,
+        scientificBackground = scientificBackgroundLight,
+        iconButton = iconButtonLight,
+        operator = operatorLight,
+        cancel = cancelLight,
+        equalKey = equalKeyLight
+    )
+}
 
-private val LightColorScheme = lightColorScheme(
-    background = Color(0xFFEEF3EC),
-    primary = Color(0xFFFFFFFF),
-    onPrimary = Color(0xFF000000),
-    scrim = Color(0xFF767474),
-    secondary = Color(0xFFDDDDDD),
-    onSecondary = Color(0xFF2CBE00),
-    tertiary = Color.Red,
+val localDarkColorScheme = compositionLocalOf {
+    CustomColorScheme(
+        basicUpperPanelBackground = basicUpperPanelBackgroundDark,
+        basicUpperPanelShadow = basicUpperPanelShadowDark,
+        basicScreenBackground = basicScreenBackgroundDark,
+        basicNumberButtonBackground = basicNumberButtonBackgroundDark,
+        basicNumberButtonKey = basicNumberButtonKeyDark,
+        basicOperatorButtonKey = basicOperatorButtonKeyDark,
+        basicOperatorButtonBackground = basicOperatorButtonBackgroundDark,
+        scientificBackground = scientificBackgroundDark,
+        iconButton = iconButtonDark,
+        operator = operatorDark,
+        cancel = cancelDark,
+        equalKey = equalKeyDark
+    )
+}
 
-)
+val localCustomColorScheme = compositionLocalOf<CustomColorScheme> {
+    error("No CustomColorScheme provided")
+}
+
+
+
 
 @Composable
 fun EngineeringCalculatorTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+    // Choose the appropriate color scheme based on the theme
+    val customColorScheme = if (darkTheme) {
+        localDarkColorScheme.current
+    } else {
+        localLightColorScheme.current
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(
+        localCustomColorScheme provides customColorScheme
+    ) {
+        MaterialTheme(
+            typography = Typography,
+            // Optionally use Material's colorScheme for Material components
+            colorScheme = if (darkTheme) darkColorScheme() else lightColorScheme(),
+            content = content
+        )
+    }
 }

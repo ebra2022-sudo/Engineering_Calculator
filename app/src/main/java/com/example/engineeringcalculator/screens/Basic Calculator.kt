@@ -1,6 +1,8 @@
 package com.example.engineeringcalculator.screens
 
 
+import android.app.Activity
+import android.content.pm.ActivityInfo
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -29,109 +32,150 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.engineeringcalculator.R
 import com.example.engineeringcalculator.ui.theme.EngineeringCalculatorTheme
+import com.example.engineeringcalculator.ui.theme.localCustomColorScheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BasicCalculator(modifier: Modifier = Modifier) {
+fun BasicCalculator(modifier: Modifier = Modifier, navController: NavController) {
+    val colors = localCustomColorScheme.current
     val scope = rememberCoroutineScope()
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            TopAppBar(title = {},
-                navigationIcon = {
-                    IconButton(onClick = {}) {
-                        Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = MaterialTheme.colorScheme.scrim)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary))
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
 
-        }
 
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            DrawerContents(screens = Screens.entries, navController = navController, drawerState, scope)
+        },
+        scrimColor = Color.Transparent
     ) {
 
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(it), verticalArrangement = Arrangement.SpaceBetween) {
-            UpperPanel()
-            LowerPanel()
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            topBar = {
+                TopAppBar(title = {},
+                    navigationIcon = {
+                        IconButton(onClick = {scope.launch { drawerState.open()}}) {
+                            Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = colors.iconButton)
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.basicUpperPanelBackground))
+            }
+
+        ) {
+            Column(modifier = Modifier
+                .fillMaxSize()
+                .background(colors.basicScreenBackground)
+                .padding(it),
+                verticalArrangement = Arrangement.SpaceBetween) {
+                var expression by remember { mutableStateOf("") }
+                BasicUpperPanel(expression = expression)
+                BasicLowerPanel(
+                    onButtonClick = {
+                        if (it == "C") expression = ""
+                        else if (expression.length <= 20) expression = expression.plus(it)
+
+                    }, onClearClick = { expression = expression.dropLast(1) })
+            }
         }
-
-
     }
-
 }
-// sample current value
+
 
 
 @Composable
-fun DrawerContent(onMenuItemClick: (String) -> Unit) {
+fun DrawerContents(
+    screens: List<Screens>,
+    navController: NavController,
+    drawerState: DrawerState,
+    coroutineScope: CoroutineScope
+) {
+    val colors = localCustomColorScheme.current
+    val shadowColor = colors.basicUpperPanelShadow// Semi-transparent black
+    val shadowOffset = Offset(4f, 0f) // Shadow direction (left and up)
+    val shadowRadius = 50f
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.Start
-    ) {
-        Text(
-            text = "Basic",
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-                .clickable { onMenuItemClick("") }
-        )
-        Text(
-            text = "Settings",
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-                .clickable { onMenuItemClick("Settings") }
-        )
-
-        Text(
-            text = "Profile",
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-                .clickable { onMenuItemClick("Profile") }
-        )
-
+        Modifier
+            .fillMaxHeight()
+            .fillMaxWidth(0.75f).background(colors.basicUpperPanelBackground)
+            ){
+        Spacer(modifier = Modifier.height(100.dp))
+        for (screen in screens) {
+            DrawerItem(screen.name) {
+                coroutineScope.launch {
+                    drawerState.close()
+                    navController.navigate(screen.name) {
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            }
+        }
     }
 }
 
 @Composable
-fun UpperPanel(modifier: Modifier = Modifier) {
-    val shadowColor = MaterialTheme.colorScheme.scrim // Semi-transparent black
+fun DrawerItem(label: String, onClick: () -> Unit) {
+    Text(
+        text = label,
+        modifier = Modifier
+            .clickable { onClick() }
+            .padding(16.dp)
+    )
+}
+//Upper panel
+@Composable
+fun BasicUpperPanel(expression: String = "", result: String = "") {
+    val colors = localCustomColorScheme.current
+    val shadowColor = colors.basicUpperPanelShadow // Semi-transparent black
     val shadowOffset = Offset(0f, 4f) // Shadow direction (left and up)
-    val shadowRadius = 50f // Shadow blur radius
+    val shadowRadius = 50f// Shadow blur radius
     Card(modifier = Modifier
-        .fillMaxWidth()
-        .height(250.dp)
+        .fillMaxWidth().fillMaxHeight(0.33f)
         .drawBehind {
             val paint = Paint().apply {
                 color = shadowColor
@@ -142,8 +186,6 @@ fun UpperPanel(modifier: Modifier = Modifier) {
                     shadowColor.toArgb()
                 )
             }
-            // sample of the current value of the state of
-            //
             drawIntoCanvas { canvas ->
                 canvas.drawRoundRect(
                     left = 0f,
@@ -157,44 +199,74 @@ fun UpperPanel(modifier: Modifier = Modifier) {
             }
         },
         shape = RoundedCornerShape(bottomStart = 37.38.dp, bottomEnd = 37.38.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
+        colors = CardDefaults.cardColors(containerColor = colors.basicUpperPanelBackground),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
 
         ) {
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f), text = expression, textAlign = TextAlign.Right, fontSize = 28.sp)
+            Text(modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f), text = result, textAlign = TextAlign.Right, fontSize = 28.sp)
+
+        }
 
     }
 }
 
 @Composable
-fun LowerPanel(modifier: Modifier = Modifier) {
-    BasicKeyBoard()
-}
-
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-fun BasicKeyBoard(modifier: Modifier = Modifier) {
+fun BasicLowerPanel(modifier: Modifier = Modifier, onHistoryClick: () -> Unit = {}, onClearClick: () -> Unit = {}, onButtonClick: (String) -> Unit = {}) {
     val keys = arrayOf("C", "( )", "%", "÷", "7", "8", "9", "×", "4", "5", "6", "-", "1", "2", "3", "+", "+/-", "0", ".", "=")
+    val colors = localCustomColorScheme.current
     Column(modifier = Modifier
         .fillMaxSize()
         .padding(20.dp), verticalArrangement = Arrangement.SpaceBetween) {
-        HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.scrim, modifier = Modifier.padding(horizontal = 16.dp))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically){
-            IconButton(onClick = {}) { 
-                Icon(painter = painterResource(R.drawable.history__1_), contentDescription = null, modifier= Modifier.size(24.dp), tint = MaterialTheme.colorScheme.scrim)
+        HorizontalDivider(
+            thickness = 1.dp,
+            color = colors.iconButton,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onHistoryClick) {
+                Icon(
+                    painter = painterResource(R.drawable.history__1_),
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = colors.iconButton
+                )
             }
-            IconButton(onClick = {}) {
-                Icon(painter = painterResource(R.drawable.clear_symbol_icon_clear_icon_11553466179ohmvqvonvz), contentDescription = null, modifier= Modifier.size(width = 27.dp, height = 24.dp), tint = MaterialTheme.colorScheme.scrim)
-            }
-        }
-        Spacer(modifier = Modifier.height(10.dp))
 
-        FlowRow (horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth(), maxItemsInEachRow = 4, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            keys.forEachIndexed {
-                    index, key->
-                ButtonItem(key = key, index = index)
+            IconButton(onClick = onClearClick) {
+                Icon(
+                    painter = painterResource(R.drawable.clear_symbol_icon_clear_icon_11553466179ohmvqvonvz),
+                    contentDescription = null,
+                    modifier = Modifier.size(width = 27.dp, height = 24.dp),
+                    tint = colors.iconButton
+                )
             }
+
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+        BasicKeyBoard(keys = keys, onButtonClick = onButtonClick)
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun BasicKeyBoard(modifier: Modifier = Modifier,keys: Array<String>, onButtonClick: (String) -> Unit = {}) {
+    FlowRow (horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth(),
+        maxItemsInEachRow = 4, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        keys.forEachIndexed {
+                index, key->
+            BasicButtonItem(key = key, index = index, onClick = onButtonClick)
         }
     }
 }
@@ -202,51 +274,82 @@ fun BasicKeyBoard(modifier: Modifier = Modifier) {
 
 
 @Composable
-fun ButtonItem(modifier: Modifier = Modifier, key: String, index: Int) {
-    val shadowColor = MaterialTheme.colorScheme.scrim // Semi-transparent black
-    val shadowOffset = Offset(0f, 5f) // Shadow direction (left and up)
+fun BasicButtonItem(modifier: Modifier = Modifier, key: String, index: Int, onClick: (String) -> Unit) {
+    val colors = localCustomColorScheme.current
+
+    val shadowColor = colors.basicUpperPanelShadow // Semi-transparent black
+    val shadowOffset = Offset(0f, 7f) // Shadow direction (left and up)
     val shadowRadius = 8f
-    Card(modifier = Modifier.size(75.dp).drawBehind {
-        val paint = Paint().apply {
-            color = shadowColor
-            asFrameworkPaint().setShadowLayer(
-                shadowRadius,
-                shadowOffset.x,
-                shadowOffset.y,
-                shadowColor.toArgb()
-            )
+    Card(modifier = Modifier
+        .size(75.dp)
+        .drawBehind {
+            val paint = Paint().apply {
+                color = shadowColor
+                asFrameworkPaint().setShadowLayer(
+                    shadowRadius,
+                    shadowOffset.x,
+                    shadowOffset.y,
+                    shadowColor.toArgb()
+                )
+            }
+            drawIntoCanvas { canvas ->
+                canvas.drawRoundRect(
+                    left = 0f,
+                    top = 0f,
+                    right = size.width,
+                    bottom = size.height,
+                    radiusX = 37.38.dp.toPx(),
+                    radiusY = 37.38.dp.toPx(),
+                    paint = paint
+                )
+            }
         }
-        drawIntoCanvas { canvas ->
-            canvas.drawRoundRect(
-                left = 0f,
-                top = 0f,
-                right = size.width,
-                bottom = size.height,
-                radiusX = 37.38.dp.toPx(),
-                radiusY = 37.38.dp.toPx(),
-                paint = paint
-            )
-        }
-    }, shape = CircleShape, elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        .clickable(onClick = { onClick(key) }), shape = CircleShape, elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(containerColor = when(index) {
-            19 -> MaterialTheme.colorScheme.onSecondary
-            0,1,2,3,7,11, 15-> MaterialTheme.colorScheme.secondary
-            else -> MaterialTheme.colorScheme.primary
+            19 -> colors.basicOperatorButtonKey
+            0,1,2,3,7,11, 15-> colors.basicOperatorButtonBackground
+            else -> colors.basicNumberButtonBackground
 
         }, contentColor = when(index) {
-            0 -> MaterialTheme.colorScheme.tertiary
-            19 -> Color.White
-            1,2,3,7,11,15 -> MaterialTheme.colorScheme.onSecondary
-            else -> MaterialTheme.colorScheme.onPrimary
+            0 -> colors.cancel
+            19 -> colors.equalKey
+            1,2,3,7,11,15 -> colors.basicOperatorButtonKey
+            else -> colors.basicNumberButtonKey
 
         })) {
         Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(text = key, fontSize = 40.sp, fontFamily = FontFamily(Font(R.font.inter_light)))
+            Text(text = key, fontSize = 40.sp, style = TextStyle(fontFamily = FontFamily(Font(R.font.inter_light))))
         }
     }
 }
-// sample
-// sampleof the  current value of the  state f the current value
+
+
+@Composable
+fun OrientationScreen(
+    isLandscape: Boolean,
+    content: @Composable () -> Unit
+) {
+    val context = LocalContext.current
+    val activity = rememberUpdatedState(context as Activity)
+
+    DisposableEffect(isLandscape) {
+        val requestedOrientation = if (isLandscape) {
+            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        } else {
+            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
+        activity.value.requestedOrientation = requestedOrientation
+
+        onDispose {
+            // Reset to sensor orientation on exit
+            activity.value.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
+    }
+
+    content()
+}
+
+
 
 
 @Preview(showBackground = true, apiLevel = 33)
@@ -256,12 +359,11 @@ private fun PreviewLightMode() {
         //UpperPanel()
         //ButtonItem()
         //BasicKeyBoard()
-        BasicCalculator()
+        BasicCalculator(navController = rememberNavController())
 
     }
-
-
 }
+
 
 @Preview(showBackground = true, apiLevel = 33)
 @Composable
@@ -270,7 +372,7 @@ private fun PreviewDarkMode() {
         //UpperPanel()
         //ButtonItem()
         //BasicKeyBoard()
-        BasicCalculator()
+        BasicCalculator(navController = rememberNavController())
 
     }
 }

@@ -1,9 +1,11 @@
 package com.example.engineeringcalculator.screens
 
-sealed class Screens(name: String) {
-    data object BasicCalculator: Screens(name = "Basic Calculator")
-    data object ScientificCalculator: Screens(name = "Scientific Calculator")
-    data object Graph: Screens(name = "Graph")
-    data object MatrixAndComplexNumber: Screens(name = "Matrix and Complex Number")
-    data object MathSolver: Screens(name = "Math Solver")
+enum class Screens(val route: String) {
+    BasicCalculator("basic_calculator"),
+    ScientificCalculator("scientific_calculator"),
+    Graph("graph"),
+    MatrixAndComplexNumber("matrix_and_complex_number"),
+    MathSolver("math_solver"),
 }
+
+
