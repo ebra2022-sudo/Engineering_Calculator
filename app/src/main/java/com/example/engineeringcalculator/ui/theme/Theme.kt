@@ -27,7 +27,10 @@ data class CustomColorScheme(
     val iconButton: Color,
     val operator:Color,
     val cancel:Color,
-    val equalKey:Color
+    val equalKey:Color,
+    val scientificIconButton: Color,
+    val scientificNumberButtonKey: Color,
+    val scientificNumberButtonBackground: Color,
 )
 val localLightColorScheme = compositionLocalOf {
     CustomColorScheme(
@@ -38,11 +41,14 @@ val localLightColorScheme = compositionLocalOf {
         basicNumberButtonKey = basicNumberButtonKeyLight,
         basicOperatorButtonKey = basicOperatorButtonKeyLight,
         basicOperatorButtonBackground = basicOperatorButtonBackgroundLight,
-        scientificBackground = scientificBackgroundLight,
         iconButton = iconButtonLight,
         operator = operatorLight,
         cancel = cancelLight,
-        equalKey = equalKeyLight
+        equalKey = equalKeyLight,
+        scientificIconButton = scientificIconButtonLight,
+        scientificNumberButtonKey = scientificNumberButtonKeyLight,
+        scientificNumberButtonBackground = scientificNumberButtonBackgroundLight,
+        scientificBackground = scientificBackgroundLight,
     )
 }
 
@@ -55,11 +61,14 @@ val localDarkColorScheme = compositionLocalOf {
         basicNumberButtonKey = basicNumberButtonKeyDark,
         basicOperatorButtonKey = basicOperatorButtonKeyDark,
         basicOperatorButtonBackground = basicOperatorButtonBackgroundDark,
-        scientificBackground = scientificBackgroundDark,
         iconButton = iconButtonDark,
         operator = operatorDark,
         cancel = cancelDark,
-        equalKey = equalKeyDark
+        equalKey = equalKeyDark,
+        scientificIconButton = scientificIconButtonDark,
+        scientificNumberButtonKey = scientificNumberButtonKeyDark,
+        scientificNumberButtonBackground = scientificNumberButtonBackgroundDark,
+        scientificBackground = scientificBackgroundDark,
     )
 }
 
