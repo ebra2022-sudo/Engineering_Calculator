@@ -82,7 +82,6 @@ fun ScientificScreen(
     }
 }
 
-//
 
 @Composable
 fun ScientificUpperPanel(expression: String = "") {
@@ -93,7 +92,7 @@ fun ScientificUpperPanel(expression: String = "") {
 }
 @Composable
 fun ScientificLowerPanel(onHistoryClick: () -> Unit = {}, onClearClick: () -> Unit = {}, onButtonClick: (String) -> Unit = {}) {
-    val keys = arrayOf("rad","\u221A","\u221B","C","()","%","÷","sin","cos","tan","sec",
+    val keys = arrayOf("rad","\u221A","\u221B","C","( )","%","÷","sin","cos","tan","sec",
         "7","8","9","×","sinh","cosh","tanh","csc","4","5","6","-","log","ln","log b x",
         "cot","1","2","3","+","x!","c(n,r)","p(n,r)","cons.","+/-","0",".","=")
     val colors = localCustomColorScheme.current
@@ -106,7 +105,8 @@ fun ScientificLowerPanel(onHistoryClick: () -> Unit = {}, onClearClick: () -> Un
             modifier = Modifier.fillMaxWidth()
         )
         Row(
-            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onHistoryClick) {
@@ -134,6 +134,8 @@ fun ScientificLowerPanel(onHistoryClick: () -> Unit = {}, onClearClick: () -> Un
     }
 }
 
+// Design
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ScientificKeyBoard(keys: Array<String>, onButtonClick: (String) -> Unit = {}, onShiftClick: () -> Unit = {}) {
@@ -143,7 +145,7 @@ fun ScientificKeyBoard(keys: Array<String>, onButtonClick: (String) -> Unit = {}
         IconButton(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(colors.scientificNumberButtonBackground).size(width = 50.dp, height = 35.dp),
+                .background(colors.scientificNumberButtonBackground).size(width = 60.dp, height = 36.dp),
             onClick = onShiftClick) {
             Icon(painter = painterResource(R.drawable.shift_icon), contentDescription = "Shift", tint = colors.scientificNumberButtonKey, modifier = Modifier.size(20.dp))
 
@@ -160,7 +162,7 @@ fun ScientificButtonItem(modifier: Modifier = Modifier, key: String, index: Int,
     val colors = localCustomColorScheme.current
     Card(
         modifier = Modifier
-            .size(width = 50.dp, height = 35.dp)
+            .size(width = 60.dp, height = 36.dp)
             .then(modifier),
         shape = MaterialTheme.shapes.medium,
     ) {
@@ -177,7 +179,7 @@ fun ScientificButtonItem(modifier: Modifier = Modifier, key: String, index: Int,
                 .clickable(onClick = { onButtonClick(key) }), contentAlignment = Alignment.Center
         ) {
             Text(
-                text = if (key.split(" ").size  == 2)
+                text = if (key.split(" ").size  == 2 && key[0] != '(')
                     buildAnnotatedString{
                         val subStrings = key.split(" ")
                         withStyle(style = SpanStyle()) {
@@ -203,11 +205,11 @@ fun ScientificButtonItem(modifier: Modifier = Modifier, key: String, index: Int,
                     buildAnnotatedString { append(key) },
             color = when (index) {
                     3 -> colors.cancel
-                    4, 5, 6, 14, 22, 30 -> colors.operator
+                    4, 5, 6, 14, 22, 30 -> colors.basicOperatorButtonKey
                     38 -> colors.equalKey
                     else -> colors.scientificNumberButtonKey
                 },
-                fontSize = 16.sp
+                fontSize = 19.sp
             )
         }
     }

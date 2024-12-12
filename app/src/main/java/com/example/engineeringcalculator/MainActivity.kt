@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -11,6 +12,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import com.example.engineeringcalculator.ui.theme.EngineeringCalculatorTheme
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -18,8 +20,15 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { view, windowInsets ->
             val insetsController = WindowCompat.getInsetsController(window, view)
-            insetsController.isAppearanceLightStatusBars = true // Set status bar icons to dark
-            insetsController.isAppearanceLightNavigationBars = true
+            // Check if the system is in dark mode
+            val isSystemInDarkMode = (resources.configuration.uiMode and
+                    android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
+                    android.content.res.Configuration.UI_MODE_NIGHT_YES
+
+            // Set the status bar icons based on the mode
+            insetsController.isAppearanceLightStatusBars = !isSystemInDarkMode
+            insetsController.isAppearanceLightNavigationBars = !isSystemInDarkMode
+
             windowInsets
         }
         setContent {

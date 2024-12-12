@@ -1,11 +1,11 @@
 package com.example.engineeringcalculator.screens
 
 enum class Screens(val route: String) {
-    BasicCalculator("basic_calculator"),
-    ScientificCalculator("scientific_calculator"),
-    Graph("graph"),
-    MatrixAndComplexNumber("matrix_and_complex_number"),
-    MathSolver("math_solver"),
+    BasicCalculator("Basic Calculator"),
+    ScientificCalculator("Scientific Calculator"),
+    Graph("Graph"),
+    MatrixAndComplexNumber("Matrix and Complex Number"),
+    MathSolver("Math Solver")
 }
 
 
